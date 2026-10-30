@@ -41,15 +41,14 @@ title: Portfolio & Projects
     <h2 class="section-title">Public Repositories</h2>
   </div>
 
-  <!-- Approach A: Static Liquid Rendering -->
+  <!-- Public Repositories Showcase (reads from _data/repositories.yml or GitHub metadata) -->
   <div class="repo-grid" id="repo-grid" data-username="{{ site.github_username }}">
     {% assign portfolio_repo = site.github_username | append: ".github.io" | downcase %}
-    {% assign public_repos = site.github.public_repositories | where: "fork", false %}
-    {% if public_repos and public_repos.size > 0 %}
-      {% assign sorted_repos = public_repos | sort: "stargazers_count" | reverse %}
-      {% for repo in sorted_repos %}
+    {% assign repos = site.data.repositories | default: site.github.public_repositories %}
+    {% if repos and repos.size > 0 %}
+      {% for repo in repos %}
         {% assign current_name_down = repo.name | downcase %}
-        {% if current_name_down == portfolio_repo or repo.name == site.github.repository_name %}
+        {% if current_name_down == portfolio_repo or repo.name == site.github.repository_name or repo.fork %}
           {% continue %}
         {% endif %}
         <article class="repo-card" data-repo="{{ repo.name }}">
@@ -88,7 +87,7 @@ title: Portfolio & Projects
         </article>
       {% endfor %}
     {% else %}
-      <!-- Fallback Loading State for Approach B (Dynamic client-side fetch) -->
+      <!-- Fallback Loading State (Dynamic client-side fetch if no data file or build metadata) -->
       <div class="repo-state repo-loading" id="repo-loading">
         <div class="spinner" aria-hidden="true"></div>
         <p>Retrieving repositories from GitHub...</p>

@@ -75,6 +75,18 @@ def eval_liquid_expr(expr, ctx):
 
     return val
 
+def load_data_repos():
+    """Load repositories from _data/repositories.yml if present."""
+    data_file = os.path.join(SITE_DIR, '_data', 'repositories.yml')
+    if not os.path.exists(data_file):
+        return []
+    try:
+        import yaml
+        with open(data_file, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f) or []
+    except Exception:
+        return []
+
 def build_html():
     config_path = os.path.join(SITE_DIR, '_config.yml')
     layout_path = os.path.join(SITE_DIR, '_layouts', 'default.html')
@@ -96,11 +108,43 @@ def build_html():
     html = layout.replace('{{ content }}', body)
 
     username = config.get('github_username', 'zkalves')
+    repos = load_data_repos()
 
-    # In local python mode, site.github.public_repositories is not available at build-time.
-    # Replace the Liquid repository loop with the dynamic JS loading container (Approach B).
-    dynamic_container = f'''
-  <div class="repo-grid" id="repo-grid" data-username="{username}">
+    if repos:
+        cards_html = []
+        for r in repos:
+            name = r.get('name', '')
+            url = r.get('html_url', f"https://github.com/{username}/{name}")
+            desc = r.get('description', 'No description provided.')
+            lang = r.get('language', 'Other')
+            stars = r.get('stargazers_count', 0)
+            cards_html.append(f'''
+        <article class="repo-card" data-repo="{name}">
+          <div class="repo-card-top">
+            <h3 class="repo-title">
+              <a href="{url}" target="_blank" rel="noopener noreferrer">{name}</a>
+            </h3>
+            <span class="repo-stars" title="{stars} stars">
+              <span class="star-icon">&#9733;</span> {stars}
+            </span>
+          </div>
+          <p class="repo-desc">{desc}</p>
+          <div class="repo-card-bottom">
+            <span class="repo-lang">
+              <span class="lang-dot" data-lang="{lang}"></span>
+              {lang}
+            </span>
+            <a href="{url}" class="repo-link" target="_blank" rel="noopener noreferrer" aria-label="Visit {name} repository">
+              View Repository &rarr;
+            </a>
+          </div>
+        </article>''')
+
+        grid_html = f'''  <div class="repo-grid" id="repo-grid" data-username="{username}">
+{''.join(cards_html)}
+  </div>'''
+    else:
+        grid_html = f'''  <div class="repo-grid" id="repo-grid" data-username="{username}">
     <div class="repo-state repo-loading" id="repo-loading">
       <div class="spinner" aria-hidden="true"></div>
       <p>Retrieving repositories from GitHub...</p>
@@ -108,8 +152,8 @@ def build_html():
   </div>'''
 
     html = re.sub(
-        r'<!-- Approach A:.*?</div>\s*</section>',
-        dynamic_container.strip() + '\n</section>',
+        r'<div class="repo-grid"[^>]*>.*?</div>\s*</section>',
+        grid_html + '\n</section>',
         html,
         flags=re.DOTALL
     )
