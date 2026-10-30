@@ -38,22 +38,7 @@ title: Portfolio & Projects
 
 <section class="projects-section" id="projects">
   <div class="section-header">
-    <div>
-      <h2 class="section-title">Public Repositories</h2>
-      <p class="section-subtitle">Excluding forks &amp; this portfolio &bull; Sorted by stars &amp; activity</p>
-    </div>
-    <div class="section-status">
-      <span class="status-pill" id="rendering-mode-badge">
-        {% if site.github.public_repositories and site.github.public_repositories.size > 0 %}
-          Liquid Static Render
-        {% else %}
-          Checking...
-        {% endif %}
-      </span>
-      <button id="refresh-cache-btn" class="btn-refresh" title="Force refresh repository cache" style="display: none;">
-        &#x21bb; Refresh API
-      </button>
-    </div>
+    <h2 class="section-title">Public Repositories</h2>
   </div>
 
   <!-- Approach A: Static Liquid Rendering -->
@@ -117,8 +102,6 @@ title: Portfolio & Projects
   (function() {
     const USERNAME = document.getElementById('repo-grid').dataset.username || '{{ site.github_username }}';
     const gridContainer = document.getElementById('repo-grid');
-    const badge = document.getElementById('rendering-mode-badge');
-    const refreshBtn = document.getElementById('refresh-cache-btn');
 
     const CACHE_KEY = 'gh_repos_v2_' + USERNAME;
     const CACHE_TIME_KEY = 'gh_repos_ts_v2_' + USERNAME;
@@ -127,30 +110,11 @@ title: Portfolio & Projects
 
     // Check if Liquid static rendering (Approach A) already rendered repo cards
     const staticCards = gridContainer.querySelectorAll('.repo-card');
-
     if (staticCards.length > 0) {
-      if (badge) {
-        badge.textContent = 'Liquid Static (' + staticCards.length + ' repos)';
-        badge.classList.add('status-static');
-      }
       return; // Approach A succeeded at build time; no API calls needed!
     }
 
-    // Approach B: Client-side fetch fallback with localStorage caching
-    if (badge) {
-      badge.textContent = 'Client API Fallback';
-      badge.classList.add('status-dynamic');
-    }
-    if (refreshBtn) {
-      refreshBtn.style.display = 'inline-flex';
-      refreshBtn.addEventListener('click', function() {
-        localStorage.removeItem(CACHE_KEY);
-        localStorage.removeItem(CACHE_TIME_KEY);
-        loadRepositories(true);
-      });
-    }
-
-    function renderRepositories(repos, sourceLabel) {
+    function renderRepositories(repos) {
       // Exclude forks and this portfolio repository
       const cleanRepos = (Array.isArray(repos) ? repos : []).filter(function(r) {
         if (!r || r.fork) return false;
@@ -199,10 +163,6 @@ title: Portfolio & Projects
       });
 
       gridContainer.innerHTML = html;
-
-      if (badge) {
-        badge.textContent = `Client API: ${repos.length} repos (${sourceLabel})`;
-      }
     }
 
     function renderError(message, status) {
@@ -231,8 +191,7 @@ title: Portfolio & Projects
             const age = Date.now() - parseInt(cachedTime, 10);
             if (age < CACHE_TTL_MS) {
               const repos = JSON.parse(cachedData);
-              const ageMinutes = Math.floor(age / 60000);
-              renderRepositories(repos, `cached ${ageMinutes}m ago`);
+              renderRepositories(repos);
               return;
             }
           }
@@ -276,7 +235,7 @@ title: Portfolio & Projects
             console.warn('localStorage write error:', e);
           }
 
-          renderRepositories(filtered, 'live API');
+          renderRepositories(filtered);
         })
         .catch(function(err) {
           console.error('GitHub API fetch failed:', err);
@@ -286,7 +245,7 @@ title: Portfolio & Projects
             const staleData = localStorage.getItem(CACHE_KEY);
             if (staleData) {
               const staleRepos = JSON.parse(staleData);
-              renderRepositories(staleRepos, 'stale cache / offline');
+              renderRepositories(staleRepos);
               return;
             }
           } catch (e) {
