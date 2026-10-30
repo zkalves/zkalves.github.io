@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+
+  <!-- Hacker Theme Stylesheet (with cache buster) -->
+  <link rel="stylesheet" href="{{ '/assets/css/style.css?v=hacker' | relative_url }}">
+
+  <!-- Jekyll SEO & Feeds -->
+  {% seo %}
+  {% feed_meta %}
+</head>
+<body>
+  <a href="#main_content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="site-branding">
+        <a id="a-title" href="{{ '/' | relative_url }}">
+          <h1 class="site-title"><span class="site-prompt">&gt;</span> {{ site.github_username | default: site.author | default: "portfolio" }}<span class="cursor">_</span></h1>
+        </a>
+      </div>
+
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#projects" class="nav-link">Projects</a>
+        {% if site.github_username %}
+          <a href="https://github.com/{{ site.github_username }}" class="btn btn-github" target="_blank" rel="noopener noreferrer">
+            GitHub ↗
+          </a>
+        {% endif %}
+        {% if site.linkedin_url %}
+          <a href="{{ site.linkedin_url }}" class="btn btn-linkedin" target="_blank" rel="noopener noreferrer">
+            LinkedIn ↗
+          </a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <main id="main_content" class="site-main">
+      {{ content }}
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-copy">
+        &copy; {{ 'now' | date: "%Y" }} {{ site.author | default: site.github_username }}. Hacker theme for GitHub Pages.
+      </p>
+      <p class="footer-links">
+        <a href="#top" class="back-to-top">↑ Top</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

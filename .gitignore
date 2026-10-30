@@ -1,0 +1,14 @@
+# Jekyll build output and caches
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Bundler local path and configuration
+.bundle/
+vendor/bundle/
+vendor/cache/
+
+# Environment files
+.env
+.env.local

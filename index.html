@@ -1,1 +1,302 @@
-Hello World
+---
+layout: default
+title: Portfolio & Projects
+---
+
+<section class="hero-section">
+  <div class="hero-content">
+    <div class="hero-badge">Hardware &amp; Cryptography</div>
+    <h1 class="hero-title">
+      Hi, I'm <span class="highlight">{{ site.author | default: site.github_username }}</span>.
+    </h1>
+    <div class="hero-bio">
+      <p>
+        Digital Hardware Engineer. Currently engineering post-quantum cryptographic hardware at PQShield, bridging secure algorithm implementation with rigorous microarchitectural verification.
+      </p>
+      <p>
+        When away from tapeouts, I develop open-source systems software and hardware design tooling.
+      </p>
+      <p class="hero-subtext">
+        Code lives on <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener noreferrer">GitHub</a>; professional inquiries on <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <a href="#projects" class="btn btn-primary">Browse Repositories</a>
+      {% if site.github_username %}
+        <a href="https://github.com/{{ site.github_username }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+          GitHub ↗
+        </a>
+      {% endif %}
+      {% if site.linkedin_url %}
+        <a href="{{ site.linkedin_url }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+          LinkedIn ↗
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="projects-section" id="projects">
+  <div class="section-header">
+    <div>
+      <h2 class="section-title">Public Repositories</h2>
+      <p class="section-subtitle">Excluding forks &amp; this portfolio &bull; Sorted by stars &amp; activity</p>
+    </div>
+    <div class="section-status">
+      <span class="status-pill" id="rendering-mode-badge">
+        {% if site.github.public_repositories and site.github.public_repositories.size > 0 %}
+          Liquid Static Render
+        {% else %}
+          Checking...
+        {% endif %}
+      </span>
+      <button id="refresh-cache-btn" class="btn-refresh" title="Force refresh repository cache" style="display: none;">
+        &#x21bb; Refresh API
+      </button>
+    </div>
+  </div>
+
+  <!-- Approach A: Static Liquid Rendering -->
+  <div class="repo-grid" id="repo-grid" data-username="{{ site.github_username }}">
+    {% assign portfolio_repo = site.github_username | append: ".github.io" | downcase %}
+    {% assign public_repos = site.github.public_repositories | where: "fork", false %}
+    {% if public_repos and public_repos.size > 0 %}
+      {% assign sorted_repos = public_repos | sort: "stargazers_count" | reverse %}
+      {% for repo in sorted_repos %}
+        {% assign current_name_down = repo.name | downcase %}
+        {% if current_name_down == portfolio_repo or repo.name == site.github.repository_name %}
+          {% continue %}
+        {% endif %}
+        <article class="repo-card" data-repo="{{ repo.name }}">
+          <div class="repo-card-top">
+            <h3 class="repo-title">
+              <a href="{{ repo.html_url }}" target="_blank" rel="noopener noreferrer">
+                {{ repo.name }}
+              </a>
+            </h3>
+            <span class="repo-stars" title="{{ repo.stargazers_count }} stars">
+              <span class="star-icon">&#9733;</span> {{ repo.stargazers_count | default: 0 }}
+            </span>
+          </div>
+
+          <p class="repo-desc">
+            {{ repo.description | default: "No description provided." | escape }}
+          </p>
+
+          <div class="repo-card-bottom">
+            {% if repo.language %}
+              <span class="repo-lang">
+                <span class="lang-dot" data-lang="{{ repo.language }}"></span>
+                {{ repo.language }}
+              </span>
+            {% else %}
+              <span class="repo-lang repo-lang-muted">
+                <span class="lang-dot"></span>
+                Other
+              </span>
+            {% endif %}
+
+            <a href="{{ repo.html_url }}" class="repo-link" target="_blank" rel="noopener noreferrer" aria-label="Visit {{ repo.name }} repository">
+              View Repository &rarr;
+            </a>
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      <!-- Fallback Loading State for Approach B (Dynamic client-side fetch) -->
+      <div class="repo-state repo-loading" id="repo-loading">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Retrieving repositories from GitHub...</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Approach B: Lightweight Fallback Vanilla JavaScript with localStorage Caching -->
+<script>
+  (function() {
+    const USERNAME = document.getElementById('repo-grid').dataset.username || '{{ site.github_username }}';
+    const gridContainer = document.getElementById('repo-grid');
+    const badge = document.getElementById('rendering-mode-badge');
+    const refreshBtn = document.getElementById('refresh-cache-btn');
+
+    const CACHE_KEY = 'gh_repos_v2_' + USERNAME;
+    const CACHE_TIME_KEY = 'gh_repos_ts_v2_' + USERNAME;
+    const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour caching to respect GitHub API rate limits (60 req/hr)
+    const PORTFOLIO_REPO = (USERNAME + '.github.io').toLowerCase();
+
+    // Check if Liquid static rendering (Approach A) already rendered repo cards
+    const staticCards = gridContainer.querySelectorAll('.repo-card');
+
+    if (staticCards.length > 0) {
+      if (badge) {
+        badge.textContent = 'Liquid Static (' + staticCards.length + ' repos)';
+        badge.classList.add('status-static');
+      }
+      return; // Approach A succeeded at build time; no API calls needed!
+    }
+
+    // Approach B: Client-side fetch fallback with localStorage caching
+    if (badge) {
+      badge.textContent = 'Client API Fallback';
+      badge.classList.add('status-dynamic');
+    }
+    if (refreshBtn) {
+      refreshBtn.style.display = 'inline-flex';
+      refreshBtn.addEventListener('click', function() {
+        localStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(CACHE_TIME_KEY);
+        loadRepositories(true);
+      });
+    }
+
+    function renderRepositories(repos, sourceLabel) {
+      // Exclude forks and this portfolio repository
+      const cleanRepos = (Array.isArray(repos) ? repos : []).filter(function(r) {
+        if (!r || r.fork) return false;
+        return (r.name || '').toLowerCase() !== PORTFOLIO_REPO;
+      });
+
+      if (cleanRepos.length === 0) {
+        gridContainer.innerHTML = `
+          <div class="repo-state repo-empty">
+            <p>No public project repositories found for <strong>${escapeHtml(USERNAME)}</strong>.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      cleanRepos.forEach(function(repo) {
+        const name = escapeHtml(repo.name || '');
+        const url = escapeHtml(repo.html_url || '#');
+        const desc = escapeHtml(repo.description || 'No description provided.');
+        const lang = escapeHtml(repo.language || 'Other');
+        const stars = Number(repo.stargazers_count || 0);
+
+        html += `
+          <article class="repo-card" data-repo="${name}">
+            <div class="repo-card-top">
+              <h3 class="repo-title">
+                <a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>
+              </h3>
+              <span class="repo-stars" title="${stars} stars">
+                <span class="star-icon">&#9733;</span> ${stars}
+              </span>
+            </div>
+            <p class="repo-desc">${desc}</p>
+            <div class="repo-card-bottom">
+              <span class="repo-lang">
+                <span class="lang-dot" data-lang="${lang}"></span>
+                ${lang}
+              </span>
+              <a href="${url}" class="repo-link" target="_blank" rel="noopener noreferrer" aria-label="Visit ${name} repository">
+                View Repository &rarr;
+              </a>
+            </div>
+          </article>
+        `;
+      });
+
+      gridContainer.innerHTML = html;
+
+      if (badge) {
+        badge.textContent = `Client API: ${repos.length} repos (${sourceLabel})`;
+      }
+    }
+
+    function renderError(message, status) {
+      gridContainer.innerHTML = `
+        <div class="repo-state repo-error">
+          <p><strong>Failed to load repositories:</strong> ${escapeHtml(message)}</p>
+          ${status === 403 ? '<p class="sub-text">GitHub unauthenticated API rate limit reached. Please wait or check again later.</p>' : ''}
+          <p><a href="https://github.com/${escapeHtml(USERNAME)}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Visit GitHub Profile Directly ↗</a></p>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function loadRepositories(forceRefresh) {
+      // 1. Try reading valid cache from localStorage
+      if (!forceRefresh) {
+        try {
+          const cachedData = localStorage.getItem(CACHE_KEY);
+          const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+          if (cachedData && cachedTime) {
+            const age = Date.now() - parseInt(cachedTime, 10);
+            if (age < CACHE_TTL_MS) {
+              const repos = JSON.parse(cachedData);
+              const ageMinutes = Math.floor(age / 60000);
+              renderRepositories(repos, `cached ${ageMinutes}m ago`);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('localStorage read error:', e);
+        }
+      }
+
+      // 2. Fetch fresh data from GitHub REST API
+      const apiUrl = `https://api.github.com/users/${encodeURIComponent(USERNAME)}/repos?per_page=100&sort=updated`;
+
+      fetch(apiUrl)
+        .then(function(res) {
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        })
+        .then(function(data) {
+          if (!Array.isArray(data)) {
+            throw new Error('Unexpected API response format');
+          }
+
+          // Filter out forks & this portfolio repository, then sort by stars & activity
+          const filtered = data
+            .filter(function(repo) {
+              if (repo.fork) return false;
+              return (repo.name || '').toLowerCase() !== PORTFOLIO_REPO;
+            })
+            .sort(function(a, b) {
+              const diffStars = (b.stargazers_count || 0) - (a.stargazers_count || 0);
+              if (diffStars !== 0) return diffStars;
+              return new Date(b.pushed_at || 0) - new Date(a.pushed_at || 0);
+            });
+
+          // Cache filtered results in localStorage
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(filtered));
+            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+          } catch (e) {
+            console.warn('localStorage write error:', e);
+          }
+
+          renderRepositories(filtered, 'live API');
+        })
+        .catch(function(err) {
+          console.error('GitHub API fetch failed:', err);
+
+          // Fallback to expired cache if available before showing hard error
+          try {
+            const staleData = localStorage.getItem(CACHE_KEY);
+            if (staleData) {
+              const staleRepos = JSON.parse(staleData);
+              renderRepositories(staleRepos, 'stale cache / offline');
+              return;
+            }
+          } catch (e) {
+            // ignore
+          }
+
+          renderError(err.message || 'Unable to connect to GitHub API');
+        });
+    }
+
+    loadRepositories(false);
+  })();
+</script>
