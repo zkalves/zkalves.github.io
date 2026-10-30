@@ -32,7 +32,7 @@ docker-serve: ## Start preview using official Jekyll Docker image
 	docker run --rm -v "$$PWD:/srv/jekyll" -p $(PORT):4000 -it jekyll/jekyll:pages jekyll serve
 
 check: ## Validate YAML configuration and template integrity
-	@$(PYTHON) -c "import yaml; yaml.safe_load(open('_config.yml')); print('YAML syntax: OK')"
+	@$(PYTHON) -c "import yaml; yaml.safe_load(open('_config.yml')); yaml.safe_load(open('.github/workflows/deploy.yml')); print('YAML syntax: OK')"
 	@$(PYTHON) -c "import preview; preview.build_html(); print('Template rendering: OK')"
 
 clean: ## Remove Jekyll build artifacts and temporary cache directories
