@@ -103,9 +103,8 @@ title: Portfolio & Projects
     const USERNAME = document.getElementById('repo-grid').dataset.username || '{{ site.github_username }}';
     const gridContainer = document.getElementById('repo-grid');
 
-    const CACHE_KEY = 'gh_repos_v2_' + USERNAME;
-    const CACHE_TIME_KEY = 'gh_repos_ts_v2_' + USERNAME;
-    const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour caching to respect GitHub API rate limits (60 req/hr)
+    const CACHE_KEY = 'gh_repos_v3_' + USERNAME;
+    const CACHE_TIME_KEY = 'gh_repos_ts_v3_' + USERNAME;
     const PORTFOLIO_REPO = (USERNAME + '.github.io').toLowerCase();
 
     // Check if Liquid static rendering (Approach A) already rendered repo cards
@@ -181,26 +180,33 @@ title: Portfolio & Projects
       return div.innerHTML;
     }
 
-    function loadRepositories(forceRefresh) {
-      // 1. Try reading valid cache from localStorage
-      if (!forceRefresh) {
-        try {
-          const cachedData = localStorage.getItem(CACHE_KEY);
-          const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-          if (cachedData && cachedTime) {
-            const age = Date.now() - parseInt(cachedTime, 10);
-            if (age < CACHE_TTL_MS) {
-              const repos = JSON.parse(cachedData);
-              renderRepositories(repos);
-              return;
-            }
+    function loadRepositories() {
+      const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      // On localhost, revalidate after 30 seconds; on live sites, revalidate after 5 minutes
+      const maxFreshAgeMs = isLocal ? (30 * 1000) : (5 * 60 * 1000);
+
+      let hasCachedContent = false;
+
+      // 1. Stale-While-Revalidate: render cache immediately so page loads with zero delay
+      try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+        if (cachedData && cachedTime) {
+          const age = Date.now() - parseInt(cachedTime, 10);
+          const repos = JSON.parse(cachedData);
+          renderRepositories(repos);
+          hasCachedContent = true;
+
+          // If cache was updated very recently, no need to query GitHub API again right away
+          if (age < maxFreshAgeMs) {
+            return;
           }
-        } catch (e) {
-          console.warn('localStorage read error:', e);
         }
+      } catch (e) {
+        console.warn('localStorage read error:', e);
       }
 
-      // 2. Fetch fresh data from GitHub REST API
+      // 2. Fetch fresh repository data from GitHub REST API in the background
       const apiUrl = `https://api.github.com/users/${encodeURIComponent(USERNAME)}/repos?per_page=100&sort=updated`;
 
       fetch(apiUrl)
@@ -227,7 +233,7 @@ title: Portfolio & Projects
               return new Date(b.pushed_at || 0) - new Date(a.pushed_at || 0);
             });
 
-          // Cache filtered results in localStorage
+          // Update cache with fresh data
           try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(filtered));
             localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
@@ -235,27 +241,21 @@ title: Portfolio & Projects
             console.warn('localStorage write error:', e);
           }
 
+          // Re-render cards with updated descriptions seamlessly
           renderRepositories(filtered);
         })
         .catch(function(err) {
           console.error('GitHub API fetch failed:', err);
 
-          // Fallback to expired cache if available before showing hard error
-          try {
-            const staleData = localStorage.getItem(CACHE_KEY);
-            if (staleData) {
-              const staleRepos = JSON.parse(staleData);
-              renderRepositories(staleRepos);
-              return;
-            }
-          } catch (e) {
-            // ignore
+          // If we already showed cached cards, don't break the UI with an error message
+          if (hasCachedContent) {
+            return;
           }
 
           renderError(err.message || 'Unable to connect to GitHub API');
         });
     }
 
-    loadRepositories(false);
+    loadRepositories();
   })();
 </script>
