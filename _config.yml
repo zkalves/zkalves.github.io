@@ -1,0 +1,38 @@
+# Jekyll Configuration for GitHub Pages Portfolio
+# Site Metadata
+title: "Ezequiel | Hardware Engineering"
+author: "Ezequiel"
+github_username: "zkalves"
+linkedin_url: "https://www.linkedin.com/in/ezequielalves/"
+description: "Hardware engineer specializing in cryptographic silicon architectures, post-quantum security, and digital verification."
+url: "https://zkalves.github.io"
+baseurl: "" # Leave empty for root user site (username.github.io)
+
+# Markdown Engine
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Standard GitHub Pages Plugins
+# These plugins are whitelisted and natively executed by GitHub Pages
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-github-metadata
+
+# Repository metadata for jekyll-github-metadata
+repository: zkalves/zkalves.github.io
+
+# Exclude unnecessary files and tooling from final build
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - Makefile
+  - preview.py
+  - vendor/
+  - .bundle/
+  - .git/
+  - .github/
