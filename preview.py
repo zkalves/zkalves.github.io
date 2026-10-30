@@ -146,8 +146,16 @@ def build_html():
     return html
 
 class PortfolioHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        # Prevent browser caching during local development
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
     def do_GET(self):
-        if self.path in ('/', '/index.html'):
+        req_path = self.path.split('?')[0]
+        if req_path in ('/', '/index.html'):
             try:
                 content = build_html().encode('utf-8')
                 self.send_response(200)
