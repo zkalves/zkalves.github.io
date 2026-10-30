@@ -35,6 +35,7 @@ exclude:
   - README.md
   - Makefile
   - preview.py
+  - sync_repos.py
   - vendor/
   - .bundle/
   - .git/

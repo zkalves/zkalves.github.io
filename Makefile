@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help preview dev serve jekyll-install jekyll-serve docker-serve check clean distclean
+.PHONY: help preview dev serve sync jekyll-install jekyll-serve docker-serve check clean distclean
 
 PORT ?= 4000
 PYTHON ?= python3
@@ -10,6 +10,9 @@ help: ## Show this help menu
 	@echo ""
 	@echo "Targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
+
+sync: ## Fetch latest public repositories from GitHub into _data/repositories.yml
+	$(PYTHON) sync_repos.py
 
 preview: ## Start zero-dependency local preview server (http://localhost:4000)
 	$(PYTHON) preview.py

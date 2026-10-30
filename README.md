@@ -42,6 +42,7 @@ This project provides two complementary approaches to display public projects (a
 Run `make` or `make help` to see all available commands:
 
 ```bash
+make sync            # Fetch latest public repos & descriptions into _data/repositories.yml
 make preview         # Start zero-dependency Python preview server (http://localhost:4000)
 make check           # Validate YAML and template configuration
 make jekyll-install  # Install Ruby gems to vendor/bundle
