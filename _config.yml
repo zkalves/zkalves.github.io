@@ -1,4 +1,7 @@
 # Jekyll Configuration for GitHub Pages Portfolio
+theme: jekyll-theme-hacker
+remote_theme: pages-themes/hacker@v0.2.0
+
 # Site Metadata
 title: "Ezequiel | Hardware Engineering"
 author: "Ezequiel"
@@ -15,12 +18,12 @@ kramdown:
   syntax_highlighter: rouge
 
 # Standard GitHub Pages Plugins
-# These plugins are whitelisted and natively executed by GitHub Pages
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-github-metadata
+  - jekyll-remote-theme
 
 # Repository metadata for jekyll-github-metadata
 repository: zkalves/zkalves.github.io

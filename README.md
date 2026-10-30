@@ -1,17 +1,17 @@
-# Minimal Jekyll Portfolio
+# Minimal Jekyll Portfolio (Hacker Theme)
 
-A fast, lightweight, and clean portfolio site built for GitHub Pages (`<username>.github.io`). It features a self-contained Solarized color scheme (with automatic dark/light theme detection and manual toggle) and a dual-approach GitHub repository showcase.
+A fast, lightweight, and clean portfolio site built for GitHub Pages (`<username>.github.io`). It features the iconic **Hacker** Jekyll terminal theme (dark `#212121` background, `#b5e853` phosphor green accents, and monospace typography) with a dual-approach GitHub repository showcase.
 
 ## Project Structure
 
 ```text
 .
-├── _config.yml               # Jekyll configuration & GitHub Pages plugin settings
+├── _config.yml               # Jekyll configuration, Hacker theme & GitHub Pages plugin settings
 ├── _layouts/
-│   └── default.html          # Semantic HTML5 layout with Solarized theming
+│   └── default.html          # Semantic HTML5 layout styled with Hacker theme aesthetics
 ├── assets/
 │   └── css/
-│       └── style.css         # Zero-dependency, responsive CSS with Solarized palette
+│       └── style.css         # Zero-dependency, responsive CSS matching Hacker terminal palette
 ├── index.html                # Landing page & dual repository showcase
 ├── Gemfile                   # Ruby gem dependencies for GitHub Pages
 └── README.md                 # Setup, local development, and deployment docs
@@ -119,12 +119,11 @@ baseurl: ""
 ```
 
 ### Color Palette & Theming
-Theme variables are defined at the top of `assets/css/style.css`. Both Light and Dark modes are based on Ethan Schoonover's official **Solarized** palette:
-* **Backgrounds**: Solarized Base3 (`#fdf6e3`) for Light mode; Solarized Base03 (`#002b36`) for Dark mode.
-* **Surfaces**: Solarized Base2 (`#eee8d5`) and Base02 (`#073642`).
-* **Accents**: Solarized Blue (`#268bd2`), Cyan (`#2aa198`), Green (`#859900`), and Yellow (`#b58900`).
-
-The theme toggle button in the header saves the user preference in `localStorage` and automatically syncs with system `prefers-color-scheme`.
+Theme variables are defined at the top of `assets/css/style.css` matching the official **Hacker** Jekyll theme:
+* **Background**: Classic deep charcoal `#212121` with `#151515` header and panel surfaces.
+* **Text**: Crisp `#eaeaea` terminal foreground.
+* **Accents**: Signature phosphor green `#b5e853` with glow effects for headings, prompts, links, and borders.
+* **Typography**: Pure monospace stack (`Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace`).
 
 ---
 
