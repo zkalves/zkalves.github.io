@@ -127,23 +127,25 @@ Theme variables are defined at the top of `assets/css/style.css` matching the of
 
 ---
 
-## GitHub Pages Deployment
+## GitHub Pages Deployment (Deploy from a Branch)
 
-The repository includes a GitHub Actions CI/CD workflow ([.github/workflows/deploy.yml](file:///.github/workflows/deploy.yml)) that automatically tests builds on PRs and builds/deploys the portfolio to GitHub Pages on every push to `main`.
+GitHub Pages automatically builds and publishes the Jekyll site using its built-in cloud environment without requiring custom CI workflow files:
 
 1. **Verify GitHub Pages Source**:
    - Go to your repository on GitHub: `https://github.com/<username>/<username>.github.io`
    - Navigate to **Settings** &rarr; **Pages**
    - Under **Build and deployment**:
-     - **Source**: Select **GitHub Actions**
+     - **Source**: Select **Deploy from a branch**
+     - **Branch**: Select **`main`** and **`/ (root)`**
+     - Click **Save**
 
 2. **Commit and Push to GitHub**:
    ```bash
    git add .
-   git commit -m "Initialize minimal Jekyll portfolio with GitHub Actions CI"
+   git commit -m "Update portfolio site"
    git push origin main
    ```
 
 3. **Visit Your Site**:
-   The workflow will trigger immediately in the **Actions** tab. Once completed, your portfolio is live at:
+   GitHub will automatically build the site with the Hacker theme and publish it to:
    `https://<username>.github.io`
